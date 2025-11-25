@@ -62,96 +62,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - Hostel Management</title>
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        /* Custom Styles for Professional Look */
+        /* PREMIUM DARK MODE STYLES */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #eef2f3; /* Light Gray Background */
+            background-color: #0f172a; /* Deep Slate Background */
         }
         .login-card {
-            border-top: 5px solid #0d9488; /* Teal border for admin panel */
+            background-color: #1e293b; /* Dark Card Surface */
+            border: 1px solid #334155; /* Subtle border */
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Deep Shadow */
             transition: all 0.3s ease-in-out;
         }
-        .login-card:hover {
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transform: translateY(-2px);
+        .input-field {
+            background-color: #0f172a; /* Input background slightly darker than card */
+            border: 1px solid #475569;
+            color: #f1f5f9; /* Light text */
+            transition: all 0.2s;
+            border-radius: 0.5rem;
+        }
+        .input-field:focus {
+            border-color: #3b82f6; /* Blue Focus */
+            box-shadow: 0 0 0 2px #3b82f6, 0 0 10px rgba(59, 130, 246, 0.4);
+            background-color: #1e293b;
         }
         .btn-primary {
-            background-color: #0d9488; /* Teal 600 */
-            transition: background-color 0.2s;
+            background-color: #3b82f6; /* Blue Primary Action */
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+            font-weight: 700;
         }
         .btn-primary:hover {
-            background-color: #0f766e; /* Teal 700 */
+            background-color: #2563eb;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.6);
+            transform: translateY(-1px);
         }
-        .input-focus:focus {
-            border-color: #0d9488;
-            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.4);
+        .error-msg {
+            background-color: #ef4444;
+            color: white;
+            border-left: 4px solid #b91c1c;
         }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
-    <!-- Login Container -->
-    <div class="w-full max-w-sm bg-white p-8 rounded-xl shadow-2xl space-y-6 login-card">
+    <div class="w-full max-w-sm p-10 space-y-7 login-card">
 
-        <!-- Header -->
         <header class="text-center">
-            <i data-lucide="shield" class="h-10 w-10 text-teal-600 mx-auto mb-2"></i>
-            <h2 class="text-3xl font-extrabold text-gray-900">
-                Admin Access
+            <i data-lucide="lock-keyhole" class="h-10 w-10 text-blue-400 mx-auto mb-2"></i>
+            <h2 class="text-3xl font-extrabold text-white tracking-wider">
+                ADMIN ACCESS
             </h2>
-            <p class="mt-1 text-sm text-gray-500">
-                Hostel System Administration Panel
+            <p class="mt-1 text-sm text-gray-400">
+                Securely sign in to the Hostel Management Panel
             </p>
         </header>
 
-        <!-- Login Form -->
-        <form method="post" class="space-y-4">
+        <form method="post" class="space-y-5">
 
-            <!-- Username Field -->
             <div>
                 <label for="username" class="sr-only">Username</label>
-                <input id="username" type="text" name="username" placeholder="Admin Username" required
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 text-gray-900 input-focus focus:ring-transparent focus:outline-none"
+                <input id="username" type="text" name="username" placeholder="Username / Admin ID" required
+                       class="w-full px-4 py-3 input-field focus:outline-none"
                        autocomplete="off">
             </div>
 
-            <!-- Password Field -->
             <div>
                 <label for="password" class="sr-only">Password</label>
                 <input id="password" type="password" name="password" placeholder="Password" required
-                       class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 text-gray-900 input-focus focus:ring-transparent focus:outline-none">
+                       class="w-full px-4 py-3 input-field focus:outline-none">
             </div>
 
-            <!-- Login Button -->
-            <button type="submit" class="w-full text-white btn-primary py-3 rounded-lg font-semibold shadow-md hover:shadow-lg flex items-center justify-center space-x-2">
+            <button type="submit" class="w-full text-white btn-primary py-3 rounded-xl font-bold uppercase tracking-wider flex items-center justify-center space-x-2">
                 <i data-lucide="log-in" class="h-5 w-5"></i>
-                <span>Secure Sign In</span>
+                <span>Sign In</span>
             </button>
 
         </form>
 
-        <!-- Error Message -->
         <% if (!msg.isEmpty()) { %>
-            <div class="p-3 text-sm text-red-700 bg-red-100 rounded-lg border border-red-400 text-center">
+            <div class="p-3 text-sm error-msg rounded-lg border border-red-600 text-center">
                 <p class="font-medium"><%= msg %></p>
             </div>
         <% } %>
 
-        <!-- Go Back Link -->
-        <div class="pt-4 border-t border-gray-200 text-center">
-            <a href="index_enhanced.html" class="text-sm font-medium text-gray-500 hover:text-teal-600 transition-colors">
-                ← Return to Portal Selection
+        <div class="pt-6 border-t border-gray-700 text-center">
+            <a href="index.jsp" class="text-sm font-medium text-gray-400 hover:text-blue-400 transition-colors flex items-center justify-center space-x-1">
+                <i data-lucide="arrow-left" class="h-4 w-4"></i>
+                <span>Return to Main Portal</span>
             </a>
         </div>
     </div>
 
-    <!-- Re-initialize Lucide Icons -->
     <script>
         lucide.createIcons();
     </script>

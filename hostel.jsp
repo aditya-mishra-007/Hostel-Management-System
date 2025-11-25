@@ -1,27 +1,28 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.sql.*" %>
 <%
-    // Fetch session attributes to determine user role and identity
+    // --- BACKEND LOGIC ---
     String admin = (String)session.getAttribute("admin");
     String student = (String)session.getAttribute("student");
 
-    // Determine the active role and primary color theme
     String role = null;
-    String primaryColor = "indigo"; // Default to student/guest theme
-    String primaryColorHex = "#4f46e5"; // Indigo-600
+    String themeColor = "purple"; // Default Student Theme
+    String accentColor = "a855f7"; // Purple-500 Hex
     String greetingName = "Guest";
+    String badgeText = "Guest Access";
 
     if (admin != null) {
         role = "admin";
-        primaryColor = "teal";
-        primaryColorHex = "#0d9488"; // Teal-600
+        themeColor = "cyan"; // Admin Theme
+        accentColor = "06b6d4"; // Cyan-500
         greetingName = admin;
+        badgeText = "Administrator";
     } else if (student != null) {
         role = "student";
-        primaryColor = "indigo";
-        primaryColorHex = "#4f46e5"; // Indigo-600
-        // Assuming student holds the Roll Number, format the name for display
-        greetingName = "Roll No: " + student;
+        themeColor = "purple"; // Student Theme
+        accentColor = "a855f7";
+        greetingName = student;
+        badgeText = "Student Resident";
     }
 %>
 
@@ -30,165 +31,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Hostel Management</title>
-    <!-- Load Tailwind CSS -->
+    <title>Dashboard | Hostel Portal</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Lucide Icons -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Define dynamic primary color based on role for custom elements */
-        .header-bg {
-            background-color: <%= primaryColorHex %>;
-        }
-        .text-primary {
-            color: <%= primaryColorHex %>;
-        }
-        .btn-primary {
-            background-color: <%= primaryColorHex %>;
-            transition: background-color 0.2s, transform 0.2s;
-        }
-        .btn-primary:hover {
-            background-color: <%= role.equals("admin") ? "#0f766e" : "#4338ca" %>; /* Darker shade on hover */
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .card-link {
-             transition: all 0.2s ease-in-out;
-             border-left: 4px solid #e5e7eb;
-        }
-        .card-link:hover {
-             border-left: 4px solid <%= primaryColorHex %>;
-             background-color: <%= role.equals("admin") ? "#f0fdfa" : "#eef2ff" %>; /* Light hover background */
-             transform: translateX(4px);
-        }
-        /* Ensure font consistency */
+        /* --- GLOBAL THEME --- */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background-color: #0b0f19; /* Deep Midnight */
+            min-height: 100vh;
+            color: #e2e8f0;
+            overflow-x: hidden;
         }
+
+        h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+
+        /* Dynamic Background Gradients */
+        .bg-theme-admin {
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+        }
+        .bg-theme-student {
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(79, 70, 229, 0.1) 0%, transparent 50%);
+        }
+
+        /* --- GLASS COMPONENTS --- */
+        .glass-nav {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.4); /* Semi-transparent Slate */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- INTERACTIVE ACTION CARDS --- */
+        .action-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .action-card:hover {
+            transform: translateY(-4px);
+            background: rgba(30, 41, 59, 0.6);
+        }
+        .action-card:hover::before { opacity: 1; }
+
+        /* Admin Hover Theme */
+        .theme-cyan .action-card:hover {
+            border-color: #06b6d4;
+            box-shadow: 0 10px 30px -10px rgba(6, 182, 212, 0.3);
+        }
+        .theme-cyan .icon-box { color: #22d3ee; background: rgba(6, 182, 212, 0.1); }
+        .theme-cyan .action-card:hover .icon-box { background: #06b6d4; color: white; }
+
+        /* Student Hover Theme */
+        .theme-purple .action-card:hover {
+            border-color: #a855f7;
+            box-shadow: 0 10px 30px -10px rgba(168, 85, 247, 0.3);
+        }
+        .theme-purple .icon-box { color: #c084fc; background: rgba(168, 85, 247, 0.1); }
+        .theme-purple .action-card:hover .icon-box { background: #a855f7; color: white; }
+
+        .icon-box { transition: all 0.3s ease; }
+
     </style>
 </head>
-<body class="min-h-screen">
+<body class="<%= role != null && role.equals("admin") ? "bg-theme-admin theme-cyan" : "bg-theme-student theme-purple" %>">
 
-    <!-- Navbar Header -->
-    <header class="header-bg shadow-lg">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <h1 class="text-xl font-bold text-white tracking-wide flex items-center space-x-2">
-                <i data-lucide="building" class="h-6 w-6"></i>
-                <span>Hostel Portal</span>
-            </h1>
+    <!-- Navbar -->
+    <nav class="glass-nav w-full">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
 
-            <% if (role != null) { %>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm font-medium text-white/90 hidden sm:block">
-                        Logged in as: <%= greetingName %>
-                    </span>
-                    <a href="logout.jsp" class="text-white bg-red-600 hover:bg-red-700 text-sm py-2 px-4 rounded-lg font-semibold shadow-md flex items-center space-x-2">
-                         <i data-lucide="log-out" class="h-4 w-4"></i>
-                         <span>Logout</span>
+                <!-- Logo Area -->
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-xl bg-gradient-to-br <%= role != null && role.equals("admin") ? "from-cyan-500 to-emerald-500" : "from-purple-500 to-indigo-500" %> flex items-center justify-center shadow-lg">
+                        <i data-lucide="building-2" class="h-6 w-6 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-white tracking-tight">Hostel<span class="opacity-50 font-normal">Portal</span></h1>
+                    </div>
+                </div>
+
+                <% if (role != null) { %>
+                    <!-- User Profile & Logout -->
+                    <div class="flex items-center gap-6">
+                        <div class="hidden md:flex flex-col items-end">
+                            <span class="text-sm font-bold text-white"><%= greetingName %></span>
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/70 border border-white/5">
+                                <%= badgeText %>
+                            </span>
+                        </div>
+
+                        <a href="logout.jsp" class="group flex items-center justify-center h-10 w-10 rounded-full bg-red-500/10 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all duration-300 text-red-400" title="Logout">
+                            <i data-lucide="power" class="h-5 w-5"></i>
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        <% if (role != null) { %>
+
+            <!-- Welcome Header -->
+            <div class="mb-10 animate-fade-in-up">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-2">
+                    Dashboard
+                </h2>
+                <p class="text-slate-400 text-lg">
+                    Manage your hostel activities and status.
+                </p>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <% if (role.equals("admin")) { %>
+                    <!-- ADMIN ACTIONS -->
+
+                    <a href="view_students.jsp" class="glass-card action-card p-6 rounded-2xl flex flex-col justify-between h-48 group">
+                        <div class="flex justify-between items-start">
+                            <div class="icon-box h-12 w-12 rounded-lg flex items-center justify-center">
+                                <i data-lucide="users" class="h-6 w-6"></i>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="h-5 w-5 text-slate-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform">All Students</h3>
+                            <p class="text-sm text-slate-400 mt-1">Directory & profiles</p>
+                        </div>
+                    </a>
+
+                    <a href="manage_rooms.jsp" class="glass-card action-card p-6 rounded-2xl flex flex-col justify-between h-48 group">
+                        <div class="flex justify-between items-start">
+                            <div class="icon-box h-12 w-12 rounded-lg flex items-center justify-center">
+                                <i data-lucide="bed-double" class="h-6 w-6"></i>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="h-5 w-5 text-slate-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform">Room Manager</h3>
+                            <p class="text-sm text-slate-400 mt-1">Allocation & capacity</p>
+                        </div>
+                    </a>
+
+                    <a href="pending_requests.jsp" class="glass-card action-card p-6 rounded-2xl flex flex-col justify-between h-48 group">
+                        <div class="flex justify-between items-start">
+                            <div class="icon-box h-12 w-12 rounded-lg flex items-center justify-center">
+                                <i data-lucide="bell-ring" class="h-6 w-6"></i>
+                            </div>
+                            <span class="flex h-3 w-3 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform">Requests</h3>
+                            <p class="text-sm text-slate-400 mt-1">Approve leaves/outpasses</p>
+                        </div>
+                    </a>
+
+                    <a href="fee_reports.jsp" class="glass-card action-card p-6 rounded-2xl flex flex-col justify-between h-48 group">
+                        <div class="flex justify-between items-start">
+                            <div class="icon-box h-12 w-12 rounded-lg flex items-center justify-center">
+                                <i data-lucide="wallet" class="h-6 w-6"></i>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="h-5 w-5 text-slate-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform">Finance</h3>
+                            <p class="text-sm text-slate-400 mt-1">Fee status & dues</p>
+                        </div>
+                    </a>
+
+                <% } else { %>
+                    <!-- STUDENT ACTIONS -->
+
+                    <a href="attendance.jsp?roll=<%= student %>" class="glass-card action-card p-6 rounded-2xl flex flex-col justify-between h-48 group">
+                        <div class="flex justify-between items-start">
+                            <div class="icon-box h-12 w-12 rounded-lg flex items-center justify-center">
+                                <i data-lucide="calendar-check" class="h-6 w-6"></i>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="h-5 w-5 text-slate-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform">My Attendance</h3>
+                            <p class="text-sm text-slate-400 mt-1">Check daily logs</p>
+                        </div>
+                    </a>
+
+                    <a href="submit_leave.jsp" class="glass-card action-card p-6 rounded-2xl flex flex-col justify-between h-48 group">
+                        <div class="flex justify-between items-start">
+                            <div class="icon-box h-12 w-12 rounded-lg flex items-center justify-center">
+                                <i data-lucide="send" class="h-6 w-6"></i>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="h-5 w-5 text-slate-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform">Apply Leave</h3>
+                            <p class="text-sm text-slate-400 mt-1">Request outpass</p>
+                        </div>
+                    </a>
+
+                    <a href="view_room.jsp" class="glass-card action-card p-6 rounded-2xl flex flex-col justify-between h-48 group">
+                        <div class="flex justify-between items-start">
+                            <div class="icon-box h-12 w-12 rounded-lg flex items-center justify-center">
+                                <i data-lucide="home" class="h-6 w-6"></i>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="h-5 w-5 text-slate-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform">My Room</h3>
+                            <p class="text-sm text-slate-400 mt-1">Roommates & details</p>
+                        </div>
+                    </a>
+
+                    <a href="fee_details.jsp" class="glass-card action-card p-6 rounded-2xl flex flex-col justify-between h-48 group">
+                        <div class="flex justify-between items-start">
+                            <div class="icon-box h-12 w-12 rounded-lg flex items-center justify-center">
+                                <i data-lucide="credit-card" class="h-6 w-6"></i>
+                            </div>
+                            <i data-lucide="arrow-up-right" class="h-5 w-5 text-slate-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white group-hover:translate-x-1 transition-transform">Payments</h3>
+                            <p class="text-sm text-slate-400 mt-1">Dues & history</p>
+                        </div>
+                    </a>
+
+                <% } %>
+            </div>
+
+        <% } else { %>
+
+            <!-- ACCESS DENIED / NOT LOGGED IN STATE -->
+            <div class="flex flex-col items-center justify-center min-h-[60vh]">
+                <div class="glass-card p-10 rounded-3xl text-center max-w-lg border-red-500/20 shadow-2xl relative overflow-hidden">
+                    <!-- Background Glow -->
+                    <div class="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+                    <div class="absolute -top-10 -left-10 w-32 h-32 bg-red-500/20 blur-3xl rounded-full pointer-events-none"></div>
+
+                    <div class="h-20 w-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20">
+                        <i data-lucide="shield-alert" class="h-10 w-10 text-red-500"></i>
+                    </div>
+
+                    <h2 class="text-3xl font-bold text-white mb-2">Access Restricted</h2>
+                    <p class="text-slate-400 mb-8">You must be authenticated to view this secure dashboard.</p>
+
+                    <a href="index.html" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-xl transition-all shadow-lg shadow-red-600/20">
+                        <i data-lucide="log-in" class="h-5 w-5"></i>
+                        Login Now
                     </a>
                 </div>
-            <% } %>
-        </div>
-    </header>
+            </div>
 
-    <!-- Main Content Area -->
-    <main class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-
-        <div class="bg-white p-8 rounded-xl shadow-2xl space-y-8">
-
-            <% if (role != null) { %>
-                <!-- Logged In State -->
-                <header class="pb-4 border-b border-gray-200">
-                    <h2 class="text-3xl font-extrabold text-gray-800">
-                        Welcome back, <span class="text-primary"><%= role.equals("admin") ? "Administrator" : "Student" %></span>
-                    </h2>
-                    <p class="text-lg text-gray-500 mt-1">Your quick action links are below.</p>
-                </header>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    <% if (role.equals("admin")) { %>
-                        <!-- Admin Links (Teal Theme) -->
-                        <a href="view_students.jsp" class="card-link flex items-center p-6 rounded-xl bg-gray-50 shadow-md">
-                            <i data-lucide="users" class="h-8 w-8 text-teal-600 mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800">View All Students</h3>
-                                <p class="text-sm text-gray-500">Access full student directory and profiles.</p>
-                            </div>
-                        </a>
-                        <a href="manage_rooms.jsp" class="card-link flex items-center p-6 rounded-xl bg-gray-50 shadow-md">
-                            <i data-lucide="building-2" class="h-8 w-8 text-teal-600 mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800">Manage Rooms & Beds</h3>
-                                <p class="text-sm text-gray-500">Update capacity and allocate rooms.</p>
-                            </div>
-                        </a>
-                        <a href="pending_requests.jsp" class="card-link flex items-center p-6 rounded-xl bg-gray-50 shadow-md">
-                            <i data-lucide="bell" class="h-8 w-8 text-teal-600 mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800">Pending Leave Requests</h3>
-                                <p class="text-sm text-gray-500">Review and approve/reject outpass applications.</p>
-                            </div>
-                        </a>
-                        <a href="fee_reports.jsp" class="card-link flex items-center p-6 rounded-xl bg-gray-50 shadow-md">
-                            <i data-lucide="wallet" class="h-8 w-8 text-teal-600 mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800">Fee Management</h3>
-                                <p class="text-sm text-gray-500">View outstanding balances and financial reports.</p>
-                            </div>
-                        </a>
-                    <% } else { %>
-                        <!-- Student Links (Indigo Theme) -->
-                        <a href="attendance.jsp?roll=<%= student %>" class="card-link flex items-center p-6 rounded-xl bg-gray-50 shadow-md">
-                            <i data-lucide="calendar-check" class="h-8 w-8 text-indigo-600 mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800">View Attendance</h3>
-                                <p class="text-sm text-gray-500">Check your current attendance status.</p>
-                            </div>
-                        </a>
-                        <a href="submit_leave.jsp" class="card-link flex items-center p-6 rounded-xl bg-gray-50 shadow-md">
-                            <i data-lucide="send" class="h-8 w-8 text-indigo-600 mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800">Submit Leave Request</h3>
-                                <p class="text-sm text-gray-500">Apply for an official outpass.</p>
-                            </div>
-                        </a>
-                         <a href="view_room.jsp" class="card-link flex items-center p-6 rounded-xl bg-gray-50 shadow-md">
-                            <i data-lucide="bed-single" class="h-8 w-8 text-indigo-600 mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800">My Room & Roommates</h3>
-                                <p class="text-sm text-gray-500">View allocation details.</p>
-                            </div>
-                        </a>
-                        <a href="fee_details.jsp" class="card-link flex items-center p-6 rounded-xl bg-gray-50 shadow-md">
-                            <i data-lucide="credit-card" class="h-8 w-8 text-indigo-600 mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800">Fee Payment</h3>
-                                <p class="text-sm text-gray-500">Check balance and pay online.</p>
-                            </div>
-                        </a>
-                    <% } %>
-                </div>
-
-            <% } else { %>
-                <!-- Not Logged In State -->
-                <div class="p-10 text-center bg-red-50 border border-red-200 rounded-xl shadow-inner">
-                    <i data-lucide="lock" class="h-12 w-12 text-red-500 mx-auto mb-4"></i>
-                    <h2 class="text-2xl font-bold text-red-700">Access Denied</h2>
-                    <p class="mt-2 text-gray-600">You must be logged in as an Administrator or Student to view this dashboard.</p>
-                    <a href="index_enhanced.html" class="mt-6 inline-flex items-center justify-center py-3 px-6 text-white bg-red-600 hover:bg-red-700 rounded-lg font-semibold transition-colors shadow-md">
-                         <i data-lucide="home" class="h-5 w-5 mr-2"></i>
-                         <span>Go to Login Selection</span>
-                    </a>
-                </div>
-            <% } %>
-        </div>
+        <% } %>
 
     </main>
 
-    <!-- Re-initialize Lucide Icons -->
     <script>
         lucide.createIcons();
     </script>
